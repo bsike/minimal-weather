@@ -1,0 +1,78 @@
+body {
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.small-foot {
+    font-size: 8;
+    color: gray;
+}
+
+.weather-report {
+    border-collapse: collapse;
+}
+
+.table-head {
+    background: gray;
+}
+
+tr {
+    border: 1px solid darkgray;
+}
+
+td {
+    padding: 3px;
+}
+
+.temperature-col {
+    text-align: center;
+    border-left: 2px solid darkgray;
+}
+.uv-col {
+    text-align: center;
+}
+.precipitation-col {
+    text-align: center;
+}
+
+.odd-row {
+    background: rgb(210, 210, 210);
+}
+.even-row {
+    background: rgb(180, 180, 180);
+}
+
+.time-now {
+    border-top: 3px solid rgb(50, 200, 50);
+}
+
+.uv-null {
+    background-color: transparent;
+}
+.uv-low {
+    background-color: transparent;
+}
+.uv-mod {
+    background-color: rgb(from yellow r g b / 50%)
+}
+.uv-high {
+    background-color: rgb(from orange r g b / 50%);
+}
+.uv-vhi {
+    background-color: rgb(from red r g b / 50%);
+}
+.uv-extr {
+    background-color: rgb(from fuschia r g b / 50%);
+}
+
+.rain-none {
+    background-color: transparent;
+}
+.rain-low {
+    background-color: rgb(from skyblue r g b / 50%)
+}
+.rain-med {
+    background-color: rgb(from skyblue r g b / 50%)
+}
+.rain-hi {
+    background-color: rgb(from skyblue r g b / 50%)
+}
