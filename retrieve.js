@@ -8,7 +8,8 @@ const stationName = "KYIP"
 
 // table information
 const firstRowIdx = 0;
-const lastRowIdx = 24; // inclusive
+const lastRowIdx = 28; // inclusive
+const startHour = 5; // 5am
 
 // mapping to read month for UV index
 const monthIdxMap = new Map()
@@ -74,7 +75,7 @@ function uvClassAssignment(uvNum) {
 // turn precipitation chance into CSS class
 function precipClassAssignment(precip) {
     // get chance of precipitation in units of 10%
-    precip10 = Math.floor(precip/10)
+    const precip10 = Math.floor(precip/10)
     switch (precip10) {
         case 0:
             return "rain-none";
@@ -104,22 +105,23 @@ function giveForecastInfo(forecastWeather, forecastUV, historyTable) {
     if (tableDate.getHours() >= 20) {
         tableDate.setDate(tableDate.getDate()+1);
     }
-    // reset to 5am as reference point
-    tableDate.setHours(5);
+    // reset to start hour as reference point
+    tableDate.setHours(startHour);
     tableDate.setMinutes(0);
     tableDate.setSeconds(0);
 
+    var rowDate, thisTableRow, rowElements;
     // prep dates on all rows
-    for (i=firstRowIdx; i<=lastRowIdx; i++) {
+    for (var i=firstRowIdx; i<=lastRowIdx; i++) {
         // start from 5am; add i hours (next day handled automatically)
-        var rowDate = new Date(tableDate);
-        rowDate.setHours(5+i);
+        rowDate = new Date(tableDate);
+        rowDate.setHours(startHour+i);
 
         // get row in the table
         thisTableRow = document.getElementById("t-row-"+i);
 
         
-        const rowElements = thisTableRow.querySelectorAll("td");
+        rowElements = thisTableRow.querySelectorAll("td");
         // mark date and time in the leftmost two columns
         rowElements[0].innerHTML = myDateFormatter.format(rowDate);
         rowElements[1].innerHTML = myTimeFormatter.format(rowDate);
@@ -136,20 +138,28 @@ function giveForecastInfo(forecastWeather, forecastUV, historyTable) {
             //rowElements[0].classList.add("time-passed");
             //rowElements[1].classList.add("time-passed");
         }
+
+        // class for new day
+        if (rowDate.getHours() == 0) {
+            thisTableRow.classList.add("time-newday")
+        }
     }
 
+    var dateTimeString, dtSplitSpace, dtSplitSlash, dtSplitAMPM, dtHour,
+        dtMonthIdx, dtDateDay, dtDateYear, dateObj, row_idx, thisTableRow, 
+        uvEntry;
     // go through UV forecast
-    for (i=0; i<forecastUV.length; i++) {
+    for (var i=0; i<forecastUV.length; i++) {
         // generate the Date object from the epa.gov weird formatting
 
         // get the string and split it up
-        const dateTimeString = forecastUV[i].DATE_TIME;
-        const dtSplitSpace = dateTimeString.split(" ");
-        const dtSplitSlash = dtSplitSpace[0].split("/");
+        dateTimeString = forecastUV[i].DATE_TIME;
+        dtSplitSpace = dateTimeString.split(" ");
+        dtSplitSlash = dtSplitSpace[0].split("/");
         
         // turn 12-hour am/pm into 24-hour
-        const dtSplitAMPM = dtSplitSpace[2];
-        var dtHour = parseInt(dtSplitSpace[1]);
+        dtSplitAMPM = dtSplitSpace[2];
+        dtHour = parseInt(dtSplitSpace[1]);
         if (dtHour == 12) {
             dtHour = 0;
         }
@@ -157,18 +167,17 @@ function giveForecastInfo(forecastWeather, forecastUV, historyTable) {
             dtHour += 12;
         }
         // month, day, and year
-        const dtMonthIdx = monthIdxMap.get(dtSplitSlash[0]);
-        const dtDateDay = parseInt(dtSplitSlash[1]);
-        const dtDateYear = parseInt(dtSplitSlash[2]);
+        dtMonthIdx = monthIdxMap.get(dtSplitSlash[0]);
+        dtDateDay = parseInt(dtSplitSlash[1]);
+        dtDateYear = parseInt(dtSplitSlash[2]);
 
         // create the date object for this row of the data
-        const thisUVdateObj = new Date(
-            dtDateYear, dtMonthIdx, dtDateDay, dtHour);
+        dateObj = new Date(dtDateYear, dtMonthIdx, dtDateDay, dtHour);
 
         // attempt to find table row in the HTML
         // hour difference from 5am reference time (index 0 in the table)
         row_idx = Math.round(
-            (thisUVdateObj.getTime() - tableDate.getTime()) / 3600000);
+            (dateObj.getTime() - tableDate.getTime()) / 3600000);
         // check if this hour exists on the table
         if (row_idx >= firstRowIdx && row_idx <= lastRowIdx) {
             thisTableRow = document.getElementById("t-row-"+row_idx);
@@ -179,11 +188,12 @@ function giveForecastInfo(forecastWeather, forecastUV, historyTable) {
         }
     }
 
+    var elementsHere, timeStrSplit, dateObj, row_idx, rowQuery;
     // go through observations (priority over forecast)
     const obsRows = historyTable.querySelectorAll("tr")
     var tableObservations = Array();
     // last 24 observations
-    for (i=0; i<24; i++) {
+    for (var i=0; i<24; i++) {
         // all table entries in this row (observation)
         var elementsHere = obsRows[i].querySelectorAll("td")
 
@@ -207,21 +217,21 @@ function giveForecastInfo(forecastWeather, forecastUV, historyTable) {
         }
 
         // round the time to the nearest hour
-        const timeStrSplit = elementsHere[1].innerHTML.split(":");
+        timeStrSplit = elementsHere[1].innerHTML.split(":");
         dataHere.hourNum = parseInt(timeStrSplit[0]);
         if (parseInt(timeStrSplit[1]) > 30) {
             dataHere.hourNum = (dataHere.hourNum + 1) % 24;
         }
 
         // date object (rounded to the nearest hour)
-        const dateObj = new Date(dataHere.yearNum, dataHere.monthNum, dataHere.dayNum, dataHere.hourNum);
+        dateObj = new Date(dataHere.yearNum, dataHere.monthNum, dataHere.dayNum, dataHere.hourNum);
 
         // find in table
         row_idx = Math.round((dateObj.getTime() - tableDate.getTime()) / 3600000);
         if (row_idx >= firstRowIdx && row_idx <= lastRowIdx) {
             thisTableRow = document.getElementById("t-row-"+row_idx);
             // add temperature and conditions
-            const rowQuery = thisTableRow.querySelectorAll("td");
+            rowQuery = thisTableRow.querySelectorAll("td");
             rowQuery[2].innerHTML = Math.round(parseFloat(elementsHere[6].innerHTML));
             rowQuery[5].innerHTML = elementsHere[4].innerHTML;
 
@@ -230,7 +240,7 @@ function giveForecastInfo(forecastWeather, forecastUV, historyTable) {
 
     // go through the weather forecast JSON
     // first 36 predictions (hour-by-hour)
-    for (i=0; i<36; i++) {
+    for (var i=0; i<36; i++) {
         // super easy to read
         const dataHere = forecastWeather.properties.periods[i]
         const dateObj = new Date(dataHere.startTime)
@@ -255,58 +265,55 @@ function giveForecastInfo(forecastWeather, forecastUV, historyTable) {
     }
 }
 
-// do the requests
-// query lat & lon for weather station
-fetch("https://api.weather.gov/points/"+lat+","+lon+"")
-.then((response) => {
+async function fetchWeatherForecastJSON(wLat, wLon) {
+    const response1 = await fetch("https://api.weather.gov/points/"+wLat+","+wLon+"");
+    if (!response1.ok) {
+        throw new Error(`HTTP error: ${response1.status}`);
+    }
+    const text1 = await response1.text()
+    const json1 = JSON.parse(text1);
+    const hourlyURL = json1.properties.forecastHourly;
+
+    const response2 = await fetch(hourlyURL);
+    if (!response2.ok) {
+        throw new Error(`HTTP error: ${response2.status}`);
+    }
+    const text2 = await response2.text()
+    const json2 = JSON.parse(text2);
+    return json2;
+}
+
+async function fetchUVJSON(uvZip) {
+    const response = await fetch("https://data.epa.gov/dmapservice/getEnvirofactsUVHOURLY/ZIP/"+uvZip+"/JSON");
     if (!response.ok) {
         throw new Error(`HTTP error: ${response.status}`);
     }
-    return response.text();
-})
-.then((text) => {
-    reqjson = JSON.parse(text)
-    // from lat & lon query, get weather station URL
-    hourlyURL = reqjson.properties.forecastHourly;
-    fetch(hourlyURL)
-    .then((response2) => {
-        if (!response2.ok) {
-            throw new Error(`HTTP error: ${response2.status}`);
-        }
-        return response2.text();
-    })
-    .then((text2) => {
-        // this is the result from the weather station
-        fWeatherJSON = JSON.parse(text2);
+    const rText = await response.text()
+    const uvJSON = JSON.parse(rText);
+    return uvJSON;
+}
 
-        // now fetch the UV index information
-        fetch("https://data.epa.gov/dmapservice/getEnvirofactsUVHOURLY/ZIP/"+zip+"/JSON")
-        .then((response3) => {
-            if (!response3.ok) {
-                throw new Error(`HTTP error: ${response3.status}`);
-            }
-            return response3.text();
-        })
-        .then((text3) => {
-            fUVJSON = JSON.parse(text3);
-            // now fetch the recorded information
-            fetch("https://forecast.weather.gov/data/obhistory/"+stationName+".html")
-            .then((response4) => {
-                if (!response4.ok) {
-                    throw new Error(`HTTP error: ${response4.status}`);
-                }
-                return response4.text();
-            })
-            .then((text4) => {
-                const parser = new DOMParser();
-                doc4 = parser.parseFromString(text4, "text/html");
-                const tableResult = doc4.querySelector(".obs-history").querySelector("tbody");
-                giveForecastInfo(fWeatherJSON, fUVJSON, tableResult);
-            })
-        })
-    })
-})
+async function fetchObservationHTML(stat) {
+    const response = await fetch("https://forecast.weather.gov/data/obhistory/"+stat+".html");
+    if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+    }
+    const rText = await response.text()
+    const parser = new DOMParser();
+    const docHTML = parser.parseFromString(rText, "text/html");
+    const tableResult = docHTML.querySelector(".obs-history").querySelector("tbody");
+    return tableResult
+}
 
 // populate sources at the end of the document
 const sourceTextElement = document.getElementById("sources-text")
 sourceTextElement.innerHTML = "lat=" + lat + ",lon=" + lon + ",zip=" + zip + ",station=" + stationName
+
+// fetch the data
+const [fWeatherJSON, fUVJSON, tableResult] = await Promise.all([
+    fetchWeatherForecastJSON(lat, lon),
+    fetchUVJSON(zip),
+    fetchObservationHTML(stationName)
+]);
+
+giveForecastInfo(fWeatherJSON, fUVJSON, tableResult);

@@ -42,7 +42,10 @@ td {
 }
 
 .time-now {
-    border-top: 3px solid rgb(50, 200, 50);
+    border-top: 3px solid rgb(50, 150, 50);
+}
+.time-newday {
+    border-top: 3px solid rgb(50, 50, 150);
 }
 
 .uv-null {
