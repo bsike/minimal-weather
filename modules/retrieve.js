@@ -1,11 +1,22 @@
 console.log("Started retrieve.js")
 
 // location information
-// TODO check url
-const lat = 42.2511;
-const lon = -83.7217;
-const zip = 48104;
-const stationName = "KYIP";
+
+// check URL
+const paramsString = window.location.search;
+const searchParams = new URLSearchParams(paramsString);
+function findOrDefault(param, defaultValue) {
+    if (searchParams.has(param)) {
+        return searchParams.get(param);
+    } else {
+        return defaultValue;
+    }
+}
+
+const lat = findOrDefault("lat", "42.2511");
+const lon = findOrDefault("lon", "-83.7217");
+const zip = findOrDefault("zip", "48104");
+const stationName = findOrDefault("station", "KYIP");
 
 // table information
 const firstRowIdx = 0;

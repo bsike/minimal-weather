@@ -2,6 +2,7 @@ console.log("Started apply.js")
 
 import {workingPromise, lat, lon, zip, stationName } from "./retrieve.js";
 
+// classes for columns of the table
 const columnClasses = [
     "date-col",
     "time-col",
@@ -11,20 +12,28 @@ const columnClasses = [
     "conditions-col"
 ]
 
+// add a row to the table (even and odd considerations)
 function addTableRow(bodyElement, rowNum) {
     var rowElement = document.createElement("tr")
+    // give it identification
     rowElement.setAttribute("id", "t-row-"+rowNum)
+
+    // odd/even check
     var oddEven = "odd";
     if (rowNum % 2 == 0) {
         oddEven = "even";
     }
     rowElement.classList.add(oddEven+"-row")
+
+    // add columns with classes
     var colElement;
     for (var i = 0; i<columnClasses.length; i++) {
         colElement = document.createElement("td");
         colElement.classList.add(columnClasses[i]);
         rowElement.appendChild(colElement);
     }
+
+    // add to table body
     bodyElement.appendChild(rowElement)
     return rowElement;
 }
