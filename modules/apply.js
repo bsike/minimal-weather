@@ -2,6 +2,8 @@ console.log("Started apply.js")
 
 import { resultTable, lat, lon, zip, stationName } from "./retrieve.js";
 
+console.log(resultTable, lat, lon, zip, stationName)
+
 // date formatter
 const myDateFormatter = new Intl.DateTimeFormat("en-US", {
     weekday: "short",
