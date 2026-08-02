@@ -2,6 +2,33 @@ console.log("Started apply.js")
 
 import {workingPromise, lat, lon, zip, stationName } from "./retrieve.js";
 
+const columnClasses = [
+    "date-col",
+    "time-col",
+    "temperature-col",
+    "uv-col",
+    "precipitation-col",
+    "conditions-col"
+]
+
+function addTableRow(bodyElement, rowNum) {
+    var rowElement = document.createElement("tr")
+    rowElement.setAttribute("id", "t-row-"+rowNum)
+    var oddEven = "odd";
+    if (rowNum % 2 == 0) {
+        oddEven = "even";
+    }
+    rowElement.classList.add(oddEven+"-row")
+    var colElement;
+    for (var i = 0; i<columnClasses.length; i++) {
+        colElement = document.createElement("td");
+        colElement.classList.add(columnClasses[i]);
+        rowElement.appendChild(colElement);
+    }
+    bodyElement.appendChild(rowElement)
+    return rowElement;
+}
+
 // date formatter
 const myDateFormatter = new Intl.DateTimeFormat("en-US", {
     weekday: "short",
@@ -123,9 +150,11 @@ const resultTable = await workingPromise;
 
 // row-by-row in the table
 var resultRow, thisTableRow, rowElements, rowDate;
+const tableBody = document.getElementById("body-of-table")
 for (var i=0; i < resultTable.length; i++) {
     resultRow = resultTable[i];
-    thisTableRow = document.getElementById("t-row-"+i);
+    //thisTableRow = document.getElementById("t-row-"+i);
+    thisTableRow = addTableRow(tableBody, i)
     rowElements = thisTableRow.querySelectorAll("td");
 
     // input text
