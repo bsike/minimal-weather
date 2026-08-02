@@ -1,4 +1,6 @@
-import { resultTable, lat, lon, zip, stationName } from "/modules/retrieve.js";
+console.log("Started apply.js")
+
+import { resultTable, lat, lon, zip, stationName } from "./retrieve.js";
 
 // date formatter
 const myDateFormatter = new Intl.DateTimeFormat("en-US", {

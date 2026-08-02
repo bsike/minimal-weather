@@ -1,3 +1,4 @@
+console.log("Started retrieve.js")
 
 // location information
 // TODO check url
