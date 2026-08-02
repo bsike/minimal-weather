@@ -86,8 +86,8 @@ function giveForecastInfo(forecastWeather, forecastUV, historyTable) {
     // date to use for the table
     // assume today unless it's 8pm or later, then assume tomorrow
     var tableDate = new Date();
-    if (todayNow.getHours() > 19) {
-        tableDate.setDay(tableDate.getDay()+1);
+    if (tableDate.getHours() > 19) {
+        tableDate.setDate(tableDate.getDate()+1);
     }
     tableDate.setHours(5);
     tableDate.setMinutes(0);
