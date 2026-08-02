@@ -39,6 +39,24 @@ const myTimeFormatter = new Intl.DateTimeFormat("en-US", {
     hour: "2-digit",
   })
 
+function temperatureClassAssignment(temperature) {
+    if (temperature > 85) {
+        return "temperature-hot";
+    }
+    else if (temperature > 75) {
+        return "temperature-warm";
+    }
+    else if (temperature < 55) {
+        return "temperature-cold";
+    }
+    else if (temperature < 65) {
+        return "temperature-cool";
+    }
+    else {
+        return "temperature-default";
+    }
+}
+
 // turn integer UV index into a CSS class
 // https://www.who.int/news-room/questions-and-answers/item/radiation-the-ultraviolet-(uv)-index
 function uvClassAssignment(uvNum) {
@@ -184,7 +202,7 @@ function giveForecastInfo(forecastWeather, forecastUV, historyTable) {
             // add UV index
             uvEntry = thisTableRow.querySelectorAll("td")[3]
             uvEntry.innerHTML = forecastUV[i].UV_VALUE;
-            uvEntry.classList.add(uvClassAssignment(forecastUV[i].UV_VALUE));
+            //uvEntry.classList.add(uvClassAssignment(forecastUV[i].UV_VALUE));
         }
     }
 
@@ -257,10 +275,38 @@ function giveForecastInfo(forecastWeather, forecastUV, historyTable) {
             } // otherwise, this row was already given by observations
             const precipNum = dataHere.probabilityOfPrecipitation.value
             rowQuery[4].innerHTML = precipNum.toString().padStart(2, "0") + "%";
-            rowQuery[4].classList.add(precipClassAssignment(precipNum))
+            //rowQuery[4].classList.add(precipClassAssignment(precipNum))
             if (rowQuery[5].innerHTML == "") {
                 rowQuery[5].innerHTML = dataHere.shortForecast;
             } // otherwise, this row was already given by observations
+        }
+    }
+
+    // color table rows
+    var tel, uvel, precipel, ttext, uvtext, preciptext, tnum, uvnum, precipnum;
+    for (var i=firstRowIdx; i<=lastRowIdx; i++) {
+        thisTableRow = document.getElementById("t-row-"+i);
+        rowElements = thisTableRow.querySelectorAll("td");
+
+        tel = rowElements[2];
+        ttext = tel.innerHTML;
+        if (ttext.length > 0) {
+            tnum = parseInt(ttext);
+            tel.classList.add(temperatureClassAssignment(tnum));
+        }
+        
+        uvel = rowElements[3];
+        uvtext = uvel.innerHTML;
+        if (uvtext.length > 0) {
+            uvnum = parseInt(uvtext);
+            uvel.classList.add(uvClassAssignment(uvnum));
+        }
+
+        precipel = rowElements[4];
+        preciptext = precipel.innerHTML;
+        if (preciptext.length > 0) {
+            precipnum = parseInt(preciptext.substring(0,2));
+            precipel.classList.add(precipClassAssignment(precipnum))
         }
     }
 }

@@ -19,6 +19,10 @@ tr {
     border: 1px solid darkgray;
 }
 
+th {
+    padding-top: 10px;
+}
+
 td {
     padding: 3px;
 }
@@ -26,12 +30,17 @@ td {
 .temperature-col {
     text-align: center;
     border-left: 2px solid darkgray;
+    border-right: 1px solid darkgray;
 }
 .uv-col {
     text-align: center;
+    border-left: 1px solid darkgray;
+    border-right: 1px solid darkgray;
 }
 .precipitation-col {
     text-align: center;
+    border-left: 1px solid darkgray;
+    border-right: 2px solid darkgray;
 }
 
 .odd-row {
@@ -46,6 +55,22 @@ td {
 }
 .time-newday {
     border-top: 3px solid rgb(50, 50, 150);
+}
+
+.temperature-hot {
+    background-color: rgb(from red r g b / 40%);
+}
+.temperature-warm {
+    background-color: rgb(from orange r g b / 40%);
+}
+.temperature-default {
+    background-color: transparent;
+}
+.temperature-cool {
+    background-color: rgb(from skyblue r g b / 40%);
+}
+.temperature-cold {
+    background-color: rgb(from blue r g b / 40%);
 }
 
 .uv-null {
