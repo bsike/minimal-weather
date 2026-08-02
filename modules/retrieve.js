@@ -12,9 +12,6 @@ const firstRowIdx = 0;
 const lastRowIdx = 28; // inclusive
 const startHour = 5; // 5am
 
-// result table
-const resultTable = Array();
-
 // mapping to read month for UV index
 const monthIdxMap = new Map();
 monthIdxMap.set("Jan", 0);
@@ -32,7 +29,8 @@ monthIdxMap.set("Dec", 11);
 
 // Given the JSON info, populate the paragraph elements,
 // populate the forecast table.
-function giveForecastInfo(forecastWeather, forecastUV, historyTable) {
+function tabulateForecastInfo(forecastWeather, forecastUV, historyTable) {
+    const resultTable = Array();
     // create Date object for right now
     const todayNow = new Date();
 
@@ -163,6 +161,7 @@ function giveForecastInfo(forecastWeather, forecastUV, historyTable) {
             }
         }
     }
+    return resultTable
 }
 
 async function fetchWeatherForecastJSON(wLat, wLon) {
@@ -202,16 +201,23 @@ async function fetchObservationHTML(stat) {
     const parser = new DOMParser();
     const docHTML = parser.parseFromString(rText, "text/html");
     const tableResult = docHTML.querySelector(".obs-history").querySelector("tbody");
-    return tableResult
+    return tableResult;
 }
 
-// fetch the data
-const [fWeatherJSON, fUVJSON, tableResult] = await Promise.all([
-    fetchWeatherForecastJSON(lat, lon),
-    fetchUVJSON(zip),
-    fetchObservationHTML(stationName)
-]);
+// main function to generate the table
+async function generateTable(resolve) {
+    // fetch the data
+    const [fWeatherJSON, fUVJSON, tableResult] = await Promise.all([
+        fetchWeatherForecastJSON(lat, lon),
+        fetchUVJSON(zip),
+        fetchObservationHTML(stationName)
+    ]);
 
-giveForecastInfo(fWeatherJSON, fUVJSON, tableResult);
+    // resolve this promise with the table array
+    resolve(tabulateForecastInfo(fWeatherJSON, fUVJSON, tableResult));
+}
 
-export {resultTable, lat, lon, zip, stationName};
+// start generating the table in the background
+const workingPromise = new Promise((resolve) => {generateTable(resolve)});
+
+export {workingPromise, lat, lon, zip, stationName};

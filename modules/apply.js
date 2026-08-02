@@ -1,8 +1,6 @@
 console.log("Started apply.js")
 
-import { resultTable, lat, lon, zip, stationName } from "./retrieve.js";
-
-console.log(resultTable, lat, lon, zip, stationName)
+import {workingPromise, lat, lon, zip, stationName } from "./retrieve.js";
 
 // date formatter
 const myDateFormatter = new Intl.DateTimeFormat("en-US", {
@@ -120,6 +118,10 @@ const colorFuncs = [
 
 const todayNow = new Date();
 
+// wait for retrieve.js to actually generate the table
+const resultTable = await workingPromise;
+
+// row-by-row in the table
 var resultRow, thisTableRow, rowElements, rowDate;
 for (var i=0; i < resultTable.length; i++) {
     resultRow = resultTable[i];
