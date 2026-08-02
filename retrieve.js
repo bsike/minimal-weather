@@ -4,112 +4,30 @@
 const lat = 42.2511;
 const lon = -83.7217;
 const zip = 48104;
-const stationName = "KYIP"
+const stationName = "KYIP";
 
 // table information
 const firstRowIdx = 0;
 const lastRowIdx = 28; // inclusive
 const startHour = 5; // 5am
 
+// result table
+const resultTable = Array();
+
 // mapping to read month for UV index
-const monthIdxMap = new Map()
-monthIdxMap.set("Jan", 0)
-monthIdxMap.set("Feb", 1)
-monthIdxMap.set("Mar", 2)
-monthIdxMap.set("Apr", 3)
-monthIdxMap.set("May", 4)
-monthIdxMap.set("Jun", 5)
-monthIdxMap.set("Jul", 6)
-monthIdxMap.set("Aug", 7)
-monthIdxMap.set("Sep", 8)
-monthIdxMap.set("Oct", 9)
-monthIdxMap.set("Nov", 10)
-monthIdxMap.set("Dec", 11)
-
-// date formatter
-const myDateFormatter = new Intl.DateTimeFormat("en-US", {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  })
-
-// time formatter
-const myTimeFormatter = new Intl.DateTimeFormat("en-US", {
-    hour: "2-digit",
-  })
-
-function temperatureClassAssignment(temperature) {
-    if (temperature > 85) {
-        return "temperature-hot";
-    }
-    else if (temperature > 75) {
-        return "temperature-warm";
-    }
-    else if (temperature < 55) {
-        return "temperature-cold";
-    }
-    else if (temperature < 65) {
-        return "temperature-cool";
-    }
-    else {
-        return "temperature-default";
-    }
-}
-
-// turn integer UV index into a CSS class
-// https://www.who.int/news-room/questions-and-answers/item/radiation-the-ultraviolet-(uv)-index
-function uvClassAssignment(uvNum) {
-    // negative values are invalid
-    if (uvNum < 0) {
-        return "uv-null";
-    } 
-    // switch-case for valid UV index values
-    switch (uvNum) {
-        case 0:
-        case 1:
-        case 2:
-            return "uv-low";
-            break;
-        case 3:
-        case 4:
-        case 5:
-            return "uv-mod";
-            break;
-        case 6:
-        case 7:
-            return "uv-high";
-            break;
-        case 8:
-        case 9:
-        case 10:
-            return "uv-vhi"
-            break;
-        default: //11 and above
-            return "uv-extr"
-    }
-}
-
-// turn precipitation chance into CSS class
-function precipClassAssignment(precip) {
-    // get chance of precipitation in units of 10%
-    const precip10 = Math.floor(precip/10)
-    switch (precip10) {
-        case 0:
-            return "rain-none";
-            break;
-        case 1:
-            return "rain-low";
-            break;
-        case 2:
-        case 3:
-        case 4:
-            return "rain-med";
-            break;
-        default: //5 and above
-            return "rain-hi";
-    }
-}
+const monthIdxMap = new Map();
+monthIdxMap.set("Jan", 0);
+monthIdxMap.set("Feb", 1);
+monthIdxMap.set("Mar", 2);
+monthIdxMap.set("Apr", 3);
+monthIdxMap.set("May", 4);
+monthIdxMap.set("Jun", 5);
+monthIdxMap.set("Jul", 6);
+monthIdxMap.set("Aug", 7);
+monthIdxMap.set("Sep", 8);
+monthIdxMap.set("Oct", 9);
+monthIdxMap.set("Nov", 10);
+monthIdxMap.set("Dec", 11);
 
 // Given the JSON info, populate the paragraph elements,
 // populate the forecast table.
@@ -135,32 +53,8 @@ function giveForecastInfo(forecastWeather, forecastUV, historyTable) {
         rowDate = new Date(tableDate);
         rowDate.setHours(startHour+i);
 
-        // get row in the table
-        thisTableRow = document.getElementById("t-row-"+i);
-
-        
-        rowElements = thisTableRow.querySelectorAll("td");
-        // mark date and time in the leftmost two columns
-        rowElements[0].innerHTML = myDateFormatter.format(rowDate);
-        rowElements[1].innerHTML = myTimeFormatter.format(rowDate);
-
-        // mark the location of the current time, and times that have passed
-        if (rowDate.getDate() == todayNow.getDate() 
-            && rowDate.getHours() == todayNow.getHours()) {
-            thisTableRow.classList.add("time-now");
-            //rowElements[0].classList.add("time-now");
-            //rowElements[1].classList.add("time-now");
-        }
-        else if (rowDate - todayNow < 0) {
-            thisTableRow.classList.add("time-passed");
-            //rowElements[0].classList.add("time-passed");
-            //rowElements[1].classList.add("time-passed");
-        }
-
-        // class for new day
-        if (rowDate.getHours() == 0) {
-            thisTableRow.classList.add("time-newday")
-        }
+        // create each row object
+        resultTable.push([rowDate, rowDate, null, null, null, ""])
     }
 
     var dateTimeString, dtSplitSpace, dtSplitSlash, dtSplitAMPM, dtHour,
@@ -198,11 +92,7 @@ function giveForecastInfo(forecastWeather, forecastUV, historyTable) {
             (dateObj.getTime() - tableDate.getTime()) / 3600000);
         // check if this hour exists on the table
         if (row_idx >= firstRowIdx && row_idx <= lastRowIdx) {
-            thisTableRow = document.getElementById("t-row-"+row_idx);
-            // add UV index
-            uvEntry = thisTableRow.querySelectorAll("td")[3]
-            uvEntry.innerHTML = forecastUV[i].UV_VALUE;
-            //uvEntry.classList.add(uvClassAssignment(forecastUV[i].UV_VALUE));
+            resultTable[row_idx][3] = forecastUV[i].UV_VALUE;
         }
     }
 
@@ -247,11 +137,8 @@ function giveForecastInfo(forecastWeather, forecastUV, historyTable) {
         // find in table
         row_idx = Math.round((dateObj.getTime() - tableDate.getTime()) / 3600000);
         if (row_idx >= firstRowIdx && row_idx <= lastRowIdx) {
-            thisTableRow = document.getElementById("t-row-"+row_idx);
-            // add temperature and conditions
-            rowQuery = thisTableRow.querySelectorAll("td");
-            rowQuery[2].innerHTML = Math.round(parseFloat(elementsHere[6].innerHTML));
-            rowQuery[5].innerHTML = elementsHere[4].innerHTML;
+            resultTable[row_idx][2] = Math.round(parseFloat(elementsHere[6].innerHTML));
+            resultTable[row_idx][5] = elementsHere[4].innerHTML;
 
         }
     }
@@ -266,47 +153,13 @@ function giveForecastInfo(forecastWeather, forecastUV, historyTable) {
         // find in table
         row_idx = Math.round((dateObj.getTime() - tableDate.getTime()) / 3600000);
         if (row_idx >= firstRowIdx && row_idx <= lastRowIdx) {
-            thisTableRow = document.getElementById("t-row-"+row_idx);
-            // add temperature, precipitation, and conditions
-            // unless they were given by observations
-            const rowQuery = thisTableRow.querySelectorAll("td");
-            if (rowQuery[2].innerHTML == "") {
-                rowQuery[2].innerHTML = dataHere.temperature;
-            } // otherwise, this row was already given by observations
-            const precipNum = dataHere.probabilityOfPrecipitation.value
-            rowQuery[4].innerHTML = precipNum.toString().padStart(2, "0") + "%";
-            //rowQuery[4].classList.add(precipClassAssignment(precipNum))
-            if (rowQuery[5].innerHTML == "") {
-                rowQuery[5].innerHTML = dataHere.shortForecast;
-            } // otherwise, this row was already given by observations
-        }
-    }
-
-    // color table rows
-    var tel, uvel, precipel, ttext, uvtext, preciptext, tnum, uvnum, precipnum;
-    for (var i=firstRowIdx; i<=lastRowIdx; i++) {
-        thisTableRow = document.getElementById("t-row-"+i);
-        rowElements = thisTableRow.querySelectorAll("td");
-
-        tel = rowElements[2];
-        ttext = tel.innerHTML;
-        if (ttext.length > 0) {
-            tnum = parseInt(ttext);
-            tel.classList.add(temperatureClassAssignment(tnum));
-        }
-        
-        uvel = rowElements[3];
-        uvtext = uvel.innerHTML;
-        if (uvtext.length > 0) {
-            uvnum = parseInt(uvtext);
-            uvel.classList.add(uvClassAssignment(uvnum));
-        }
-
-        precipel = rowElements[4];
-        preciptext = precipel.innerHTML;
-        if (preciptext.length > 0) {
-            precipnum = parseInt(preciptext.substring(0,2));
-            precipel.classList.add(precipClassAssignment(precipnum))
+            if (resultTable[row_idx][2] == null) {
+                resultTable[row_idx][2] = dataHere.temperature
+            }
+            resultTable[row_idx][4] = dataHere.probabilityOfPrecipitation.value
+            if (resultTable[row_idx][5].length == 0) {
+                resultTable[row_idx][5] = dataHere.shortForecast
+            }
         }
     }
 }
@@ -351,10 +204,6 @@ async function fetchObservationHTML(stat) {
     return tableResult
 }
 
-// populate sources at the end of the document
-const sourceTextElement = document.getElementById("sources-text")
-sourceTextElement.innerHTML = "lat=" + lat + ",lon=" + lon + ",zip=" + zip + ",station=" + stationName
-
 // fetch the data
 const [fWeatherJSON, fUVJSON, tableResult] = await Promise.all([
     fetchWeatherForecastJSON(lat, lon),
@@ -363,3 +212,5 @@ const [fWeatherJSON, fUVJSON, tableResult] = await Promise.all([
 ]);
 
 giveForecastInfo(fWeatherJSON, fUVJSON, tableResult);
+
+export {resultTable, lat, lon, zip, stationName};
