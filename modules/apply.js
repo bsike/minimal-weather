@@ -122,10 +122,10 @@ function uvClassAssignment(uvNum) {
         case 8:
         case 9:
         case 10:
-            return "uv-vhi"
+            return "uv-vhi";
             break;
         default: //11 and above
-            return "uv-extr"
+            return "uv-extr";
     }
 }
 
