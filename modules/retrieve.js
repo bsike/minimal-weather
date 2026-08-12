@@ -1,4 +1,14 @@
-console.log("Started retrieve.js")
+/*
+minimal-weather/modules/retrieve.js
+
+minimal-weather is licensed under a
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+
+You should have received a copy of the license along with this
+work. If not, see <https://creativecommons.org/licenses/by-nc-sa/4.0/>.
+*/
+
+//console.log("Started retrieve.js")
 
 // location information
 
@@ -40,7 +50,9 @@ monthIdxMap.set("Dec", 11);
 
 // Given the JSON info, populate the paragraph elements,
 // populate the forecast table.
-function tabulateForecastInfo(pointProperties, forecastWeather, forecastUV, historyTable) {
+function tabulateForecastInfo(
+    pointProperties, forecastWeather, forecastUV, historyTable) {
+
     const resultTable = Array();
     const eventTable = Array();
     // create Date object for right now
@@ -61,9 +73,11 @@ function tabulateForecastInfo(pointProperties, forecastWeather, forecastUV, hist
     tableDate.setSeconds(0);
 
     // create sunrise and sunset objects
-    const sunriseDateTime = new Date(pointProperties.properties.astronomicalData.sunrise)
+    const sunriseDateTime = new Date(
+        pointProperties.properties.astronomicalData.sunrise)
     eventTable.push([sunriseDateTime, "Sunrise"])
-    const sunsetDateTime = new Date(pointProperties.properties.astronomicalData.sunset)
+    const sunsetDateTime = new Date(
+        pointProperties.properties.astronomicalData.sunset)
     eventTable.push([sunsetDateTime, "Sunset"])
 
     var rowDate, thisTableRow, rowElements;
@@ -152,14 +166,23 @@ function tabulateForecastInfo(pointProperties, forecastWeather, forecastUV, hist
         }
 
         // date object (rounded to the nearest hour)
-        dateObj = new Date(dataHere.yearNum, dataHere.monthNum, dataHere.dayNum, dataHere.hourNum);
+        dateObj = new Date(
+            dataHere.yearNum, 
+            dataHere.monthNum, 
+            dataHere.dayNum, 
+            dataHere.hourNum
+            );
 
         // find in table
-        row_idx = Math.round((dateObj.getTime() - tableDate.getTime()) / 3600000);
+        row_idx = Math.round(
+            (dateObj.getTime() - tableDate.getTime()) / 3600000);
         if (row_idx >= firstRowIdx && row_idx <= lastRowIdx) {
-            resultTable[row_idx][2] = Math.round(parseFloat(elementsHere[6].innerHTML));
+            resultTable[row_idx][2] = Math.round(
+                parseFloat(
+                    elementsHere[6].innerHTML
+                    )
+                );
             resultTable[row_idx][5] = elementsHere[4].innerHTML;
-
         }
     }
 
@@ -171,7 +194,8 @@ function tabulateForecastInfo(pointProperties, forecastWeather, forecastUV, hist
         const dateObj = new Date(dataHere.startTime)
         
         // find in table
-        row_idx = Math.round((dateObj.getTime() - tableDate.getTime()) / 3600000);
+        row_idx = Math.round(
+            (dateObj.getTime() - tableDate.getTime()) / 3600000);
         if (row_idx >= firstRowIdx && row_idx <= lastRowIdx) {
             if (resultTable[row_idx][2] == null) {
                 resultTable[row_idx][2] = dataHere.temperature
@@ -186,7 +210,9 @@ function tabulateForecastInfo(pointProperties, forecastWeather, forecastUV, hist
 }
 
 async function fetchWeatherForecastJSON(wLat, wLon) {
-    const response1 = await fetch("https://api.weather.gov/points/"+wLat+","+wLon+"");
+    const response1 = await fetch(
+        "https://api.weather.gov/points/"+wLat+","+wLon+""
+        );
     if (!response1.ok) {
         throw new Error(`HTTP error: ${response1.status}`);
     }
@@ -204,7 +230,10 @@ async function fetchWeatherForecastJSON(wLat, wLon) {
 }
 
 async function fetchUVJSON(uvZip) {
-    const response = await fetch("https://data.epa.gov/dmapservice/getEnvirofactsUVHOURLY/ZIP/"+uvZip+"/JSON");
+    const response = await fetch(
+        "https://data.epa.gov/dmapservice/getEnvirofactsUVHOURLY/ZIP/"
+        +uvZip+"/JSON"
+        );
     if (!response.ok) {
         throw new Error(`HTTP error: ${response.status}`);
     }
@@ -214,14 +243,17 @@ async function fetchUVJSON(uvZip) {
 }
 
 async function fetchObservationHTML(stat) {
-    const response = await fetch("https://forecast.weather.gov/data/obhistory/"+stat+".html");
+    const response = await fetch(
+        "https://forecast.weather.gov/data/obhistory/"+stat+".html"
+        );
     if (!response.ok) {
         throw new Error(`HTTP error: ${response.status}`);
     }
     const rText = await response.text()
     const parser = new DOMParser();
     const docHTML = parser.parseFromString(rText, "text/html");
-    const tableResult = docHTML.querySelector(".obs-history").querySelector("tbody");
+    const tableResult = docHTML.querySelector(".obs-history")
+                        .querySelector("tbody");
     return tableResult;
 }
 
@@ -235,7 +267,9 @@ async function generateTable(resolve) {
     ]);
 
     // resolve this promise with the table array
-    resolve(tabulateForecastInfo(fWeatherArr[0], fWeatherArr[1], fUVJSON, tableResult));
+    resolve(tabulateForecastInfo(
+        fWeatherArr[0], fWeatherArr[1], fUVJSON, tableResult
+        ));
 }
 
 // start generating the table in the background

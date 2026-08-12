@@ -1,4 +1,14 @@
-console.log("Started apply.js")
+/*
+minimal-weather/modules/apply.js
+
+minimal-weather is licensed under a
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+
+You should have received a copy of the license along with this
+work. If not, see <https://creativecommons.org/licenses/by-nc-sa/4.0/>.
+*/
+
+//console.log("Started apply.js")
 
 import {workingPromise, lat, lon, zip, stationName } from "./retrieve.js";
 
@@ -38,6 +48,7 @@ function addTableRow(bodyElement, rowNum) {
     return rowElement;
 }
 
+// add a row to the table for events (sunrise and sunset)
 function addEventRow(bodyElement, evNum) {
     var rowElement = document.createElement("tr")
     // give it identification
@@ -61,28 +72,30 @@ function addEventRow(bodyElement, evNum) {
 }
 
 // date formatter
-const myDateFormatter = new Intl.DateTimeFormat("en-US", {
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
     weekday: "short",
     year: "numeric",
     month: "short",
     day: "2-digit",
   });
 
-// time formatter
-const myHourFormatter = new Intl.DateTimeFormat("en-US", {
+// hour-only time formatter
+const hourTimeFormatter = new Intl.DateTimeFormat("en-US", {
     hour: "2-digit",
   });
 
-const myFullTimeFormatter = new Intl.DateTimeFormat("en-US", {
+// hour and minute time formatter
+const hourMinuteTimeFormatter = new Intl.DateTimeFormat("en-US", {
     hour: "2-digit",
     minute: "2-digit",
   });
 
+// functions to format the separate columns for data rows
 function formatDateCol(dateObj) {
-    return myDateFormatter.format(dateObj);
+    return dateFormatter.format(dateObj);
 }
 function formatTimeCol(dateObj) {
-    return myHourFormatter.format(dateObj);
+    return hourTimeFormatter.format(dateObj);
 }
 function formatTemperatureCol(tNum) {
     return tNum.toString();
@@ -96,6 +109,7 @@ function formatPrecipCol(precipNum) {
 function formatConditionCol(text) {
     return text
 }
+// formatter functions for each column, for ease of for-loops
 const colFormatters = [
     formatDateCol,
     formatTimeCol,
@@ -105,6 +119,8 @@ const colFormatters = [
     formatConditionCol
 ];
 
+// turn numerical temperature into a CSS class
+// barriers are arbitrary
 function temperatureClassAssignment(temperature) {
     if (temperature > 85) {
         return "temperature-hot";
@@ -157,6 +173,7 @@ function uvClassAssignment(uvNum) {
 }
 
 // turn precipitation chance into CSS class
+// arbitrary bounds
 function precipClassAssignment(precip) {
     // get chance of precipitation in units of 10%
     const precip10 = Math.floor(precip/10)
@@ -176,49 +193,61 @@ function precipClassAssignment(precip) {
             return "rain-hi";
     }
 }
+// collect the functions to determine colors (classes)
 const colorFuncs = [
     temperatureClassAssignment, uvClassAssignment, precipClassAssignment]
 
+// object for right now, for comparison
 const todayNow = new Date();
 
-// wait for retrieve.js to actually generate the table
+// wait for retrieve.js to actually generate the tables
 const [resultTable, eventTable] = await workingPromise;
-// flag of events being done
+
+// flag of events being done (events are assumed to be in chronological order)
 var eventTableIdx = 0;
 var thisEvent = eventTable[eventTableIdx];
 
 // row-by-row in the table
+// prepare some variables
 var resultRow, thisTableRow, rowElements, rowDate;
 var eventRow, eventColumns;
 const tableBody = document.getElementById("body-of-table");
+
+// go row-by-row in the result table
 for (var i=0; i < resultTable.length; i++) {
     resultRow = resultTable[i];
     // check if we should insert an event
-    if (eventTableIdx < eventTable.length) {
-        if (resultRow[0] - thisEvent[0] > 0) {
+    if (eventTableIdx < eventTable.length) { //(any events remaining)
+        if (resultRow[0] - thisEvent[0] > 0) { //(data row passes event)
             // add event row
             eventRow = addEventRow(tableBody, eventTableIdx);
             eventColumns = eventRow.querySelectorAll("td");
-            eventColumns[0].innerHTML = myFullTimeFormatter.format(thisEvent[0]);
+            // time and event type
+            eventColumns[0].innerHTML = 
+                                   hourMinuteTimeFormatter.format(thisEvent[0]);
             eventColumns[columnClasses.length - 1].innerHTML = thisEvent[1];
+            // dashes for empty rows to look better
+            for (var j = 2; j < 5; j++)
+                eventColumns[j].innerHTML = "-"
+            // increment current event (chronological order)
             eventTableIdx++;
             if (eventTableIdx < eventTable.length) {
                 thisEvent = eventTable[eventTableIdx];
             }
         }
     }
-    //thisTableRow = document.getElementById("t-row-"+i);
+    // create a row for this data point in the HTML document
     thisTableRow = addTableRow(tableBody, i)
-    rowElements = thisTableRow.querySelectorAll("td");
+    rowElements = thisTableRow.querySelectorAll("td"); //(all columns)
 
-    // input text
+    // format data into the columns
     for (var k=0; k<6; k++) {
         if (resultRow[k] != null) {
             rowElements[k].innerHTML = colFormatters[k](resultRow[k]);
         }
     }
 
-    // color elements
+    // add classes to the columns based on the values
     for (var k=0; k<3; k++) {
         if (resultRow[k+2] != null) {
             rowElements[k+2].classList.add(colorFuncs[k](resultRow[k+2]));
@@ -229,16 +258,12 @@ for (var i=0; i < resultTable.length; i++) {
     if (resultRow[0].getDate() == todayNow.getDate() 
         && resultRow[0].getHours() == todayNow.getHours()) {
         thisTableRow.classList.add("time-now");
-        //rowElements[0].classList.add("time-now");
-        //rowElements[1].classList.add("time-now");
     }
     else if (resultRow[0] - todayNow < 0) {
         thisTableRow.classList.add("time-passed");
-        //rowElements[0].classList.add("time-passed");
-        //rowElements[1].classList.add("time-passed");
     }
 
-    // class for new day
+    // mark the location of new days (midnight)
     if (resultRow[0].getHours() == 0) {
         thisTableRow.classList.add("time-newday");
     }
@@ -246,4 +271,5 @@ for (var i=0; i < resultTable.length; i++) {
 
 // populate sources at the end of the document
 const sourceTextElement = document.getElementById("sources-text")
-sourceTextElement.innerHTML = "lat=" + lat + ",lon=" + lon + ",zip=" + zip + ",station=" + stationName
+sourceTextElement.innerHTML = "lat=" + lat + ",lon=" + lon + ",zip=" + zip + 
+                              ",station=" + stationName;
