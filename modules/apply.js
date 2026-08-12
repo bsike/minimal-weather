@@ -14,16 +14,16 @@ const columnClasses = [
 
 // add a row to the table (even and odd considerations)
 function addTableRow(bodyElement, rowNum) {
-    var rowElement = document.createElement("tr")
+    var rowElement = document.createElement("tr");
     // give it identification
-    rowElement.setAttribute("id", "t-row-"+rowNum)
+    rowElement.setAttribute("id", "t-row-"+rowNum);
 
     // odd/even check
     var oddEven = "odd";
     if (rowNum % 2 == 0) {
         oddEven = "even";
     }
-    rowElement.classList.add(oddEven+"-row")
+    rowElement.classList.add(oddEven+"-row");
 
     // add columns with classes
     var colElement;
@@ -34,8 +34,30 @@ function addTableRow(bodyElement, rowNum) {
     }
 
     // add to table body
-    bodyElement.appendChild(rowElement)
+    bodyElement.appendChild(rowElement);
     return rowElement;
+}
+
+function addEventRow(bodyElement, evNum) {
+    var rowElement = document.createElement("tr")
+    // give it identification
+    const eventRowElement = document.createElement("tr");
+    eventRowElement.setAttribute("id", "t-row-event"+evNum);
+    eventRowElement.classList.add("event-row")
+
+    // full columns
+    var colElement;
+    for (var i = 0; i<columnClasses.length; i++) {
+        colElement = document.createElement("td");
+        colElement.classList.add(columnClasses[i]);
+        colElement.classList.add("event-"+columnClasses[i]);
+        //colElement.classList.add("event-col");
+        eventRowElement.appendChild(colElement);
+    }
+
+    // add to table body
+    bodyElement.appendChild(eventRowElement);
+    return eventRowElement;
 }
 
 // date formatter
@@ -44,18 +66,23 @@ const myDateFormatter = new Intl.DateTimeFormat("en-US", {
     year: "numeric",
     month: "short",
     day: "2-digit",
-  })
+  });
 
 // time formatter
-const myTimeFormatter = new Intl.DateTimeFormat("en-US", {
+const myHourFormatter = new Intl.DateTimeFormat("en-US", {
     hour: "2-digit",
-  })
+  });
+
+const myFullTimeFormatter = new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
 function formatDateCol(dateObj) {
     return myDateFormatter.format(dateObj);
 }
 function formatTimeCol(dateObj) {
-    return myTimeFormatter.format(dateObj);
+    return myHourFormatter.format(dateObj);
 }
 function formatTemperatureCol(tNum) {
     return tNum.toString();
@@ -155,13 +182,31 @@ const colorFuncs = [
 const todayNow = new Date();
 
 // wait for retrieve.js to actually generate the table
-const resultTable = await workingPromise;
+const [resultTable, eventTable] = await workingPromise;
+// flag of events being done
+var eventTableIdx = 0;
+var thisEvent = eventTable[eventTableIdx];
 
 // row-by-row in the table
 var resultRow, thisTableRow, rowElements, rowDate;
-const tableBody = document.getElementById("body-of-table")
+var eventRow, eventColumns;
+const tableBody = document.getElementById("body-of-table");
 for (var i=0; i < resultTable.length; i++) {
     resultRow = resultTable[i];
+    // check if we should insert an event
+    if (eventTableIdx < eventTable.length) {
+        if (resultRow[0] - thisEvent[0] > 0) {
+            // add event row
+            eventRow = addEventRow(tableBody, eventTableIdx);
+            eventColumns = eventRow.querySelectorAll("td");
+            eventColumns[0].innerHTML = myFullTimeFormatter.format(thisEvent[0]);
+            eventColumns[columnClasses.length - 1].innerHTML = thisEvent[1];
+            eventTableIdx++;
+            if (eventTableIdx < eventTable.length) {
+                thisEvent = eventTable[eventTableIdx];
+            }
+        }
+    }
     //thisTableRow = document.getElementById("t-row-"+i);
     thisTableRow = addTableRow(tableBody, i)
     rowElements = thisTableRow.querySelectorAll("td");

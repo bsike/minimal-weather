@@ -21,7 +21,7 @@ const stationName = findOrDefault("station", "KYIP");
 // table information
 const firstRowIdx = 0;
 const lastRowIdx = 28; // inclusive
-const startHour = 5; // 5am
+//const startHour = 5; // 5am
 
 // mapping to read month for UV index
 const monthIdxMap = new Map();
@@ -40,21 +40,31 @@ monthIdxMap.set("Dec", 11);
 
 // Given the JSON info, populate the paragraph elements,
 // populate the forecast table.
-function tabulateForecastInfo(forecastWeather, forecastUV, historyTable) {
+function tabulateForecastInfo(pointProperties, forecastWeather, forecastUV, historyTable) {
     const resultTable = Array();
+    const eventTable = Array();
     // create Date object for right now
     const todayNow = new Date();
 
+    var startHour = 5; // start at 5am generally
+
     // date to use for the table
-    // assume today unless it's 8pm or later, then assume tomorrow
+    // assume today unless it's 8pm or later, then assume evening+tomorrow
     var tableDate = new Date();
-    if (tableDate.getHours() >= 20) {
+    if (todayNow.getHours() >= 20) {
         tableDate.setDate(tableDate.getDate()+1);
+        startHour = 20;
     }
     // reset to start hour as reference point
     tableDate.setHours(startHour);
     tableDate.setMinutes(0);
     tableDate.setSeconds(0);
+
+    // create sunrise and sunset objects
+    const sunriseDateTime = new Date(pointProperties.properties.astronomicalData.sunrise)
+    eventTable.push([sunriseDateTime, "Sunrise"])
+    const sunsetDateTime = new Date(pointProperties.properties.astronomicalData.sunset)
+    eventTable.push([sunsetDateTime, "Sunset"])
 
     var rowDate, thisTableRow, rowElements;
     // prep dates on all rows
@@ -172,7 +182,7 @@ function tabulateForecastInfo(forecastWeather, forecastUV, historyTable) {
             }
         }
     }
-    return resultTable
+    return [resultTable, eventTable]
 }
 
 async function fetchWeatherForecastJSON(wLat, wLon) {
@@ -190,7 +200,7 @@ async function fetchWeatherForecastJSON(wLat, wLon) {
     }
     const text2 = await response2.text()
     const json2 = JSON.parse(text2);
-    return json2;
+    return [json1, json2];
 }
 
 async function fetchUVJSON(uvZip) {
@@ -218,14 +228,14 @@ async function fetchObservationHTML(stat) {
 // main function to generate the table
 async function generateTable(resolve) {
     // fetch the data
-    const [fWeatherJSON, fUVJSON, tableResult] = await Promise.all([
+    const [fWeatherArr, fUVJSON, tableResult] = await Promise.all([
         fetchWeatherForecastJSON(lat, lon),
         fetchUVJSON(zip),
         fetchObservationHTML(stationName)
     ]);
 
     // resolve this promise with the table array
-    resolve(tabulateForecastInfo(fWeatherJSON, fUVJSON, tableResult));
+    resolve(tabulateForecastInfo(fWeatherArr[0], fWeatherArr[1], fUVJSON, tableResult));
 }
 
 // start generating the table in the background

@@ -49,6 +49,12 @@ td {
 .even-row {
     background: rgb(180, 180, 180);
 }
+.event-row {
+    background: rgb(230, 210, 180);
+}
+.event-date-col { 
+    text-align: right;
+}
 
 .time-now {
     border-top: 3px solid rgb(50, 150, 50);
